@@ -1,0 +1,55 @@
+#%RAML 1.0
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/65f94373-f769-4504-89e5-67ac9da63ede/ # 
+title: weather-alert-specification
+types:
+  alert:
+    type: Alert
+  Alert:
+    properties:
+      email: string
+      message: string
+    
+/weather-app:
+  /get-weather-data:
+    get:
+      description: This end point is used to forecast weather information by clubbing weather and Air api. Latitude and longitude of current and provided location received in request. The  response includes details of temperature, visibility, humidity, wind speed, direction and air quality. Based on our analysis calculate heat index, wind index, Recommendation(Non-Sensitive Group) and Recommendation(Sensitive Group)
+      queryParameters:
+        latitude:
+          type: string
+          example: "51.5052986145"
+        longitude:
+          type: string
+          example: "0.0552779995"
+      responses:
+        200:
+          body:
+            application/json:
+              
+              example: !include examples/weather-api-response.raml
+  /send-email-alert:
+    post:
+      description: This end point is used to send an alert. When we come to know that our surrounding weather is not appropriate and we need help from our loved ones. API receives message & email of the person to be notified and detects the coordinate of your location  and sends the alert. email details and message receive in request and alert sends with message, current weather information and google link of the location. confirmation message send as a response.
+      body:
+        application/json:
+          type: alert
+          example: !include examples/alert-request.raml
+            
+      responses:
+        201:
+          body:
+            application/json:
+              example:
+                {
+                "response": "Alert sent successfully"
+                }
+
+              
+              
+            
+ 
+            
+
+
+      
+          
+          

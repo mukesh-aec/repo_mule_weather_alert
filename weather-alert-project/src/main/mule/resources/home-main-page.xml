@@ -1,0 +1,299 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<sub-flow name="home-main-page-sub-flow" doc:id="b0475ce2-00a3-4014-b91d-342c05bc1f21">
+	<parse-template doc:name="Home page code" doc:id="1d646aa5-03c6-401e-8f49-8d914b3d7e2b" >
+			<content >
+&lt;html&gt;
+
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+ &lt;link rel=&quot;stylesheet&quot; href=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css&quot;&gt;
+  &lt;script src=&quot;https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js&quot;&gt;&lt;/script&gt;
+  &lt;script src=&quot;https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js&quot;&gt;&lt;/script&gt;
+  &lt;script src=&quot;https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js&quot;&gt;&lt;/script&gt;
+
+&lt;head&gt;
+&lt;!-- CSS --&gt;
+&lt;link rel=&quot;stylesheet&quot; href=&quot;https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css&quot; integrity=&quot;sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2&quot; crossorigin=&quot;anonymous&quot;&gt;
+&lt;style&gt;
+ .dot {
+  height: 25px;
+  width: 25px;
+  background-color: #000;
+  display: block;
+  border-radius: 50%;
+}
+#text{
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  font-size: 50px;
+  color: white;
+  transform: translate(-50%,-50%);
+  -ms-transform: translate(-50%,-50%);
+}
+#overlay {
+  position: fixed;
+  display: none;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0,0,0,0.5);
+  z-index: 2;
+  cursor: none;
+}
+
+&lt;/style&gt;
+
+&lt;/head&gt;
+
+&lt;body&gt;
+&lt;div align=&quot;center&quot;&gt; &lt;h1&gt; Weather Alert Demo &lt;/h1&gt; &lt;/div&gt;
+&lt;hr/&gt;
+&lt;div align=&quot;center&quot; class=&quot;alert alert-primary d-flex justify-content-info mb-2&quot; role=&quot;alert&quot; id=&quot;message-div&quot;&gt;&lt;/div&gt;
+&lt;hr/&gt;
+&lt;div  class=&quot;d-flex justify-content-center&quot;&gt;
+  &lt;div class=&quot;form-row align-items-center&quot;&gt;
+    &lt;div class=&quot;col-auto&quot;&gt;
+	  &lt;div class=&quot;input-group mb-2&quot;&gt;
+		&lt;input type=&quot;text&quot; id=&quot;lat_user&quot; class=&quot;form-control&quot; placeholder=&quot;Latitude&quot;/&gt;
+      &lt;/div&gt;
+	&lt;/div&gt;
+    &lt;div class=&quot;col-auto&quot;&gt;    
+      &lt;div class=&quot;input-group mb-2&quot;&gt;
+       &lt;input type=&quot;text&quot; id=&quot;lon_user&quot; class=&quot;form-control&quot; placeholder=&quot;Longitude&quot;&gt;
+      &lt;/div&gt;
+    &lt;/div&gt;
+	&lt;button onclick=&quot;useManualLocationAndCallWeatherDataAPI()&quot;  class=&quot;btn btn-primary mb-2&quot; &gt;Use This Location&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+&lt;br&gt;
+&lt;div class=&quot;d-flex justify-content-center&quot;&gt;
+&lt;button onclick=&quot;getLocation()&quot; class=&quot;btn btn-primary mb-2&quot; &gt;Use Current Location&lt;/button&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&amp;nbsp;
+&lt;button type=&quot;button&quot; class=&quot;btn btn-warning mb-2&quot; data-toggle=&quot;modal&quot; data-target=&quot;#myModal&quot; id=&quot;askHelpButton&quot; hidden&gt;
+  Ask Help!
+&lt;/button&gt;
+&lt;/div&gt;
+&lt;!-- Button to Open the Modal --&gt;
+&lt;div id=&quot;overlay&quot;&gt;
+   &lt;div id=&quot;text&quot;&gt;Loading...&lt;/div&gt;
+&lt;/div&gt;
+
+
+&lt;hr/&gt;
+&lt;div align=&quot;center&quot;&gt; &lt;h2  id=&quot;loc-name&quot; &gt;&lt;/h2&gt; &lt;/div&gt;
+&lt;div class=&quot;container d-flex justify-content-center&quot;&gt;
+&lt;div class=&quot;row&quot;&gt;
+&lt;div class=&quot;col-6&quot;&gt;
+&lt;div class=&quot;card&quot; style=&quot;width: 25rem;&quot; id=&quot;weather-card&quot;&gt;
+  &lt;div class=&quot;card-header  d-flex justify-content-center&quot;&gt;
+    &lt;strong&gt;Weather Data&lt;/strong&gt;
+  &lt;/div&gt;
+  &lt;ul class=&quot;list-group list-group-flush&quot;&gt;
+	&lt;li class=&quot;list-group-item   d-flex &quot;&gt;&lt;strong&gt;Heat Index : &lt;/strong&gt;&amp;nbsp;&lt;span id=&quot;heatIndex-data&quot;&gt;NA&lt;/span&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;div id=&quot;heatIndex-icon&quot; class=&quot;dot&quot;&gt;&lt;/div&gt;&lt;/li&gt;
+	&lt;li class=&quot;list-group-item   d-flex &quot;&gt;&lt;strong&gt;Wind Index : &lt;/strong&gt;&amp;nbsp;&lt;span id=&quot;windIndex-data&quot;&gt;NA&lt;/span&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;div id=&quot;windIndex-icon&quot; class=&quot;dot&quot;&gt;&lt;/div&gt;&lt;/li&gt;
+    &lt;li class=&quot;list-group-item&quot;&gt;&lt;strong&gt;Temp : &lt;/strong&gt;&lt;span id=&quot;temp-data&quot;&gt;NA&lt;/span&gt; | &lt;strong&gt;Condition : &lt;/strong&gt;&lt;span id=&quot;weather-desc&quot;&gt;&lt;/span&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;img id=&quot;weather-img&quot; src=&quot;&quot;&gt;&lt;/img&gt;&lt;/li&gt;
+    &lt;li class=&quot;list-group-item&quot;&gt;&lt;strong&gt;Visibility : &lt;/strong&gt;&lt;span id=&quot;visi-data&quot;&gt;NA&lt;/span&gt; | &lt;strong&gt;Humidity : &lt;/strong&gt;&lt;span id=&quot;humidity-data&quot;&gt;NA&lt;/span&gt;&lt;/li&gt;
+	&lt;li class=&quot;list-group-item&quot;&gt;&lt;strong&gt;Wind : &lt;/strong&gt;&lt;span id=&quot;wind-speed-data&quot;&gt;NA&lt;/span&gt; km/h | &lt;strong&gt;Direction : &lt;/strong&gt;&lt;span id=&quot;wind-dir-data&quot;&gt;NA&lt;/span&gt;&amp;deg;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&amp;nbsp;&amp;nbsp;&amp;nbsp;
+&lt;div class=&quot;card&quot; style=&quot;width: 25rem;&quot; id=&quot;aqi-card&quot;&gt;
+  &lt;div class=&quot;card-header d-flex justify-content-center&quot;&gt;
+   &lt;strong&gt;AQI Data&lt;/strong&gt;
+  &lt;/div&gt;
+  &lt;ul class=&quot;list-group list-group-flush&quot;&gt;
+	&lt;li class=&quot;list-group-item   d-flex &quot;&gt;&lt;strong&gt;Air Quality :&lt;/strong&gt;&amp;nbsp;&lt;span id=&quot;airQuality-data&quot;&gt;NA&lt;/span&gt;&amp;nbsp;&amp;nbsp;&amp;nbsp;&lt;div id=&quot;aqiIndex-icon&quot; class=&quot;dot&quot;&gt;&lt;/div&gt;&lt;/li&gt;
+    &lt;li class=&quot;list-group-item&quot;&gt;&lt;strong&gt;Recommendation(Non-Sensitive Group) : &lt;/strong&gt;&lt;br&gt;&lt;span id=&quot;rns-general&quot;&gt;NA&lt;/span&gt;&lt;/li&gt;
+	&lt;li class=&quot;list-group-item&quot;&gt;&lt;strong&gt;Recommendation(Sensitive Group) : &lt;/strong&gt;&lt;br&gt;&lt;span id=&quot;rs-general&quot;&gt;NA&lt;/span&gt;&lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;/div&gt;
+&lt;br&gt;&lt;br&gt;&lt;br&gt;
+
+
+
+
+&lt;script&gt;
+
+var jsonResponse = null;
+document.getElementById('weather-card').style.display = 'none';
+document.getElementById('aqi-card').style.display = 'none';
+function getLocation() {
+	document.getElementById(&quot;overlay&quot;).style.display = &quot;block&quot;
+	document.getElementById(&quot;message-div&quot;).setAttribute(&quot;class&quot;, &quot;alert alert-primary d-flex justify-content-center mb-2&quot;); 
+	document.getElementById(&quot;message-div&quot;).innerHTML = &quot;Fetching weather data...&quot;;
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(getAutomaticLocationAndCallWeatherDataAPI);
+  } else { 
+    x.innerHTML = &quot;Geolocation is not supported by this browser.&quot;;
+  }
+}
+function getAutomaticLocationAndCallWeatherDataAPI(position){
+document.getElementById('aqi-card').style.display = 'none';
+document.getElementById('weather-card').style.display = 'none';
+document.getElementById(&quot;loc-name&quot;).innerHTML =&quot;&quot;;	
+document.getElementById(&quot;message-div&quot;).setAttribute(&quot;class&quot;, &quot;alert alert-primary d-flex justify-content-center mb-2&quot;); 
+document.getElementById(&quot;message-div&quot;).innerHTML = &quot;Fetching weather data...&quot;;
+var lat_auto =  position.coords.latitude;
+var lon_auto =  position.coords.longitude;
+callWeatherDataAPI(lat_auto,lon_auto);
+}
+
+function useManualLocationAndCallWeatherDataAPI(){
+document.getElementById(&quot;overlay&quot;).style.display = &quot;block&quot;;
+document.getElementById('aqi-card').style.display = 'none';
+document.getElementById('weather-card').style.display = 'none';
+var lat_manual =  document.getElementById('lat_user').value;
+var lon_manual = document.getElementById('lon_user').value;
+if((lat_manual != null &amp; lat_manual != &quot;&quot; ) &amp; (lon_manual != null &amp; lon_manual != &quot;&quot; )){
+document.getElementById(&quot;message-div&quot;).setAttribute(&quot;class&quot;, &quot;alert alert-primary d-flex justify-content-center mb-2&quot;); 
+document.getElementById(&quot;message-div&quot;).innerHTML = &quot;Fetching weather data...&quot;;
+document.getElementById(&quot;loc-name&quot;).innerHTML =&quot;&quot;;	
+callWeatherDataAPI(lat_manual,lon_manual);
+
+}else {
+document.getElementById(&quot;overlay&quot;).style.display = &quot;none&quot;;
+document.getElementById(&quot;message-div&quot;).setAttribute(&quot;class&quot;, &quot;alert alert-danger d-flex justify-content-center mb-2&quot;); 
+document.getElementById(&quot;message-div&quot;).innerHTML = &quot;Please provide values for Latitude and Longitude&quot;;
+return ;
+}
+}
+
+function callWeatherDataAPI(lat,lon) {
+	// Set up our HTTP request
+var xhr = new XMLHttpRequest();
+
+// Setup our listener to process completed requests
+xhr.onload = function () {
+
+	// Process our return data
+	if (xhr.status &gt;= 200 &amp;&amp; xhr.status &lt; 300) {
+		var data=xhr.responseText;
+		  document.getElementById(&quot;overlay&quot;).style.display = &quot;none&quot;;
+		document.getElementById('askHelpButton').hidden = false
+		jsonResponse = JSON.parse(data);
+		document.getElementById('weather-card').style.display = 'block';
+		document.getElementById('aqi-card').style.display = 'block';
+		
+		
+//Weather Fields		
+		document.getElementById(&quot;loc-name&quot;).innerHTML = jsonResponse.weatherData.location.area + &quot;,&quot; + jsonResponse.weatherData.location.country;	
+		document.getElementById(&quot;temp-data&quot;).innerHTML = jsonResponse.weatherData.main.temp + &quot; &amp;deg;C&quot;;
+		document.getElementById(&quot;visi-data&quot;).innerHTML = jsonResponse.weatherData.visibility + &quot; m&quot;;
+		document.getElementById(&quot;humidity-data&quot;).innerHTML = jsonResponse.weatherData.main.humidity + &quot;%&quot;;
+		document.getElementById(&quot;wind-speed-data&quot;).innerHTML = jsonResponse.weatherData.wind.speed;
+		document.getElementById(&quot;heatIndex-data&quot;).innerHTML = jsonResponse.heatIndex.impact;
+		document.getElementById(&quot;windIndex-data&quot;).innerHTML = jsonResponse.windIndex.impact;		
+		document.getElementById(&quot;wind-dir-data&quot;).innerHTML = jsonResponse.weatherData.wind.deg;
+		document.getElementById(&quot;weather-desc&quot;).innerHTML = jsonResponse.weatherData.weather.main;	
+		document.getElementById(&quot;heatIndex-icon&quot;).style.backgroundColor = jsonResponse.heatIndex.color_hex;
+		document.getElementById(&quot;windIndex-icon&quot;).style.backgroundColor = jsonResponse.windIndex.color_hex;
+		document.getElementById(&quot;weather-img&quot;).setAttribute(&quot;src&quot;,jsonResponse.weatherData.weatherIconURL); 
+		document.getElementById(&quot;message-div&quot;).setAttribute(&quot;class&quot;, &quot;alert alert-success d-flex justify-content-center mb-2&quot;); 
+		document.getElementById(&quot;message-div&quot;).innerHTML = &quot;Weather data fetched.&quot;;
+//AQI Data
+		document.getElementById(&quot;rns-general&quot;).innerHTML = jsonResponse.airQualityData.recommended_non_sensitive.general;
+		document.getElementById(&quot;rs-general&quot;).innerHTML = jsonResponse.airQualityData.recommend_sensitive.general;
+		document.getElementById(&quot;airQuality-data&quot;).innerHTML = jsonResponse.airQualityData.aqi_visualization.name;
+		document.getElementById(&quot;aqiIndex-icon&quot;).style.backgroundColor = jsonResponse.airQualityData.aqi_visualization.color_hex;
+		} else {
+		// What do when the request fails
+		  document.getElementById(&quot;overlay&quot;).style.display = &quot;none&quot;;
+		document.getElementById(&quot;message-div&quot;).innerHTML = &quot;Failed to fetch the weather data.&quot;;
+		document.getElementById(&quot;message-div&quot;).setAttribute(&quot;class&quot;, &quot;alert alert-danger d-flex justify-content-center mb-2&quot;); 
+	}
+
+	// Code that should run regardless of the request status
+
+};
+
+var geoData = '?latitude=' + lat + '&amp;longitude=' + lon;
+
+xhr.open('GET', '/api/weather-app/get-weather-data' + geoData);
+xhr.send();
+
+}
+
+&lt;/script&gt;
+
+
+&lt;!-- The Modal --&gt;
+&lt;div class=&quot;modal fade&quot; id=&quot;myModal&quot;&gt;
+  &lt;div class=&quot;modal-dialog&quot;&gt;
+    &lt;div class=&quot;modal-content&quot;&gt;
+
+      &lt;!-- Modal Header --&gt;
+      &lt;div class=&quot;modal-header&quot;&gt;
+        &lt;h4 class=&quot;modal-title&quot;&gt;Ask for Help!&lt;/h4&gt;
+        &lt;button type=&quot;button&quot; class=&quot;close&quot; data-dismiss=&quot;modal&quot;&gt;&amp;times;&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;!-- Modal body --&gt;
+      &lt;div class=&quot;modal-body&quot;&gt;
+  &lt;div class=&quot;form-group&quot;&gt;
+    &lt;label for=&quot;exampleFormControlInput1&quot;&gt;Email address:&lt;/label&gt;
+    &lt;input type=&quot;email&quot; class=&quot;form-control&quot; id=&quot;alert-email&quot; placeholder=&quot;name@example.com&quot; required&gt;
+  &lt;/div&gt;
+  &lt;div class=&quot;form-group&quot;&gt;
+    &lt;label for=&quot;exampleFormControlTextarea1&quot;&gt;Message(Optional):&lt;/label&gt;
+    &lt;textarea class=&quot;form-control&quot; id=&quot;alert-message&quot; rows=&quot;3&quot; required&gt;&lt;/textarea&gt;
+  &lt;/div&gt;
+&lt;button onclick=&quot;sendEmailAlert()&quot; class=&quot;btn btn-success mb-2&quot; id=&quot;alertSendButton&quot;  data-dismiss=&quot;modal&quot;&gt;Send&lt;/button&gt;
+      &lt;/div&gt;
+
+      &lt;!-- Modal footer --&gt;
+      &lt;div class=&quot;modal-footer&quot;&gt;
+        &lt;button type=&quot;button&quot; class=&quot;btn btn-danger&quot; data-dismiss=&quot;modal&quot;&gt;Close&lt;/button&gt;
+      &lt;/div&gt;
+
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;script&gt;
+function sendEmailAlert(){
+document.getElementById(&quot;overlay&quot;).style.display = &quot;block&quot;;
+var emailAddress = document.getElementById('alert-email').value;
+var message =  document.getElementById('alert-message').value;
+var weatherPayload  = jsonResponse;
+var xmlhttp = new XMLHttpRequest();   // new HttpRequest instance 
+xmlhttp.open(&quot;POST&quot;, &quot;/api/weather-app/send-email-alert&quot;);
+xmlhttp.setRequestHeader(&quot;Content-Type&quot;, &quot;application/json&quot;);
+if((emailAddress != null &amp; emailAddress != &quot;&quot; ) &amp; (message != null &amp; message != &quot;&quot; )){
+xmlhttp.send(JSON.stringify({email:emailAddress, message: message, weatherPayload: weatherPayload}));
+xmlhttp.onload = function () {
+
+	// Process our return data
+	if (xmlhttp.status &gt;= 200 &amp;&amp; xmlhttp.status &lt; 300) {
+	  document.getElementById(&quot;overlay&quot;).style.display = &quot;none&quot;;
+	//window.alert(&quot;Email alert sent.&quot;);
+	}else{
+	  document.getElementById(&quot;overlay&quot;).style.display = &quot;none&quot;;
+	window.alert(&quot;Failed to send email alert.\nPlease try again.&quot;);
+	}
+}
+} else {
+document.getElementById('message-div').innerHTML = &quot;Please fill all the details.&quot;;
+document.getElementById(&quot;overlay&quot;).style.display = &quot;none&quot;;
+document.getElementById(&quot;message-div&quot;).setAttribute(&quot;class&quot;, &quot;alert alert-danger d-flex justify-content-center mb-2&quot;); 
+}
+}
+
+
+&lt;/script&gt;
+&lt;/div&gt;
+
+&lt;/body&gt;
+&lt;/html&gt;
+</content>
+		</parse-template>
+	
+	
+	</sub-flow>
+</mule>

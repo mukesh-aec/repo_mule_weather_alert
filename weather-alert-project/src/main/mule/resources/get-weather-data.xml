@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+	<sub-flow name="get-weather-data-main-sub-flow" doc:id="638cb11c-b677-44c1-b99c-0c241735b00f">
+		<set-variable value="#[attributes.queryParams.latitude]" doc:name="lat" doc:id="5350f480-b10d-499a-86f5-bf28ea75befc" variableName="lat"/>
+		<set-variable value='#["weather_api"]' doc:name="apiName" doc:id="c4e14318-7aaa-4372-bb74-df27f0971ddb" variableName="apiName"/>
+		<set-variable value="#[attributes.queryParams.longitude]" doc:name="long" doc:id="ffa641f7-8618-4b66-bf43-f283a36f0f0f" variableName="long"/>
+		<try doc:name="Try" doc:id="8fc000f4-defa-4227-951e-7e1d2046050d" >
+			<ee:cache doc:name="Cache" doc:id="ccc1e541-3381-4283-86c2-b1e0ef438118" cachingStrategy-ref="Caching_Strategy">
+				<http:request method="GET" doc:name="Call Weather API" doc:id="ac249fed-f172-4ef5-8fc9-e948d2a8f268" config-ref="Weather_API_HTTP_CONFIG" path="${openWeather.api.path}">
+			<http:query-params><![CDATA[#[output application/java
+---
+{
+	"appid" : p('openWeather.api.apiKey'),
+	"lat" : vars.lat,
+	"lon" : vars.long,
+	"units" : "metric"
+}]]]></http:query-params>
+		</http:request>
+			</ee:cache>
+			<set-variable value='#[%dw 2.0
+output application/json
+---
+{
+    "main" : payload.main default "NA",
+    "coord" : payload."coord" default "NA",
+    "weather" : payload.weather[0] default "NA",
+    "wind" : payload.wind default "NA",
+    "visibility" : payload.visibility default "NA",
+    "location" : {
+        "area" : payload.name default "NA",
+        "country" : payload.sys.country default "NA"
+    },
+    "weatherIconURL" : "http://openweathermap.org/img/wn/" ++ 
+    (payload.weather[0].icon default "01n")++ ".png" 
+}]' doc:name="weatherAPIResponse" doc:id="210b734a-4b31-47dc-af3f-e381d1b6361f" variableName="weatherAPIResponse"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="4b6b67ed-533f-402e-af1d-17ef1ef6bfd8" >
+					<set-variable value="#[{}]" doc:name="weatherAPIResponse" doc:id="0e5d8a1c-97be-4ea4-801c-37c49427cf70" variableName="weatherAPIResponse"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<set-variable value='#[%dw 2.0 
+output application/json
+import * from dw::Runtime
+var wind_speed = try(() -&gt; (((payload.wind.speed) as Number) * (5/18)) default "NA") orElse "NA"
+---
+if(wind_speed != "NA")
+( if( wind_speed &lt; 8) {"event_id" : 0,"impact" : "Light Wind","color_hex" : "#90ee90"} 
+else
+if(wind_speed &gt;= 8 and wind_speed &lt; 10){"event_id" : 1,"impact" : "Moderate Wind","color_hex" : "#008000"}
+else
+if(wind_speed &gt;= 10 and wind_speed &lt; 24){"event_id" : 2,"impact" : "Strong Wind","color_hex" : "#ffff00"}
+else
+if(wind_speed &gt;= 24 and wind_speed &lt;= 28){"event_id" : 3,"impact" : "Gale","color_hex" : "#ffa500"}
+else {"event_id" : 4,"impact" : "Storm","color_hex" : "#ff0000"})
+else {"event_id" :-1 ,"impact" : "NA","color_hex" : "#000000"}]' doc:name="windIndex" doc:id="e4b6672d-7ee2-44de-ba9f-926adbfdb3dc" variableName="windIndex" />
+		<set-variable value='#[%dw 2.0 
+output application/json 
+import * from dw::Runtime
+var feels_like = try(() -&gt; payload.main.feels_like default "NA") orElse "NA"
+--- 
+if(feels_like != "NA")
+   ( if( feels_like &lt; 26) {
+        "event_id" : 0,
+        "impact" : "Normal",
+        "color_hex" : "#90ee90"
+    } else 
+    if(feels_like &gt;= 26 and feels_like &lt; 32){
+        "event_id" : 1,
+        "impact" : "Moderate",
+        "color_hex" : "#008000"
+    }else 
+    if(feels_like &gt;= 32 and feels_like &lt; 41){
+        "event_id" : 2,
+        "impact" : "High",
+        "color_hex" : "#ffff00"
+    }else 
+    if(feels_like &gt;= 41 and feels_like &lt;= 54){
+        "event_id" : 3,
+        "impact" : "Extreme",
+        "color_hex" : "#ffa500"
+    }else {
+       "event_id" : 4,
+        "impact" : "Danger",
+        "color_hex" : "#ff0000"
+    })
+else {
+        "event_id" :-1 ,
+        "impact" : "NA",
+        "color_hex" : "#000000"
+    
+}]' doc:name="heatIndex" doc:id="ea7b3b77-4581-4ff3-9c4f-8e6df1e7dbd2" variableName="heatIndex" />
+		<set-variable value='#["aqi_api"]' doc:name="apiName" doc:id="57275495-a079-41c0-b74d-adb688d20c83" variableName="apiName"/>
+		<try doc:name="Try" doc:id="7ae57727-81bb-4184-9099-050daa2467be" >
+			<ee:cache doc:name="Cache" doc:id="1d9d66e6-8cc5-413f-93a6-00ea7f8f02fd" cachingStrategy-ref="Caching_Strategy">
+				<http:request method="GET" doc:name="Call AQI API" doc:id="79f1db3f-ac3a-46b6-a379-959738df1360" config-ref="AQI_API_HTTP_CONFIG" path="${aircheckr.api.path}">
+					<http:headers><![CDATA[#[output application/java
+---
+{
+	"x-access-token" : p('aircheckr.api.apiKey')
+}]]]></http:headers>
+					<http:uri-params><![CDATA[#[output application/java
+---
+{
+	
+	"lat" : trim(vars.lat),
+	"lon" :trim(vars.long)
+
+}]]]></http:uri-params>
+				</http:request>
+			</ee:cache>
+			<set-variable value='#[%dw 2.0
+output application/json
+var qualityData = payload.data[0]
+---
+{
+	"area" : payload.area_name,
+	"aqi" : qualityData."aqi_101",
+	"aqi_pollutants" : qualityData.aqi_101_values,
+	"aqi_visualization" : qualityData.aqi_11,
+	"recommended_non_sensitive" : qualityData.recommend_non_sensitive,
+	"recommend_sensitive" : qualityData.recommend_sensitive
+	
+}]' doc:name="aqiAPIResponse" doc:id="33bc9d8a-81c4-4d76-9aad-926f73345931" variableName="aqiAPIResponse"/>
+			<error-handler >
+				<on-error-continue enableNotifications="true" logException="true" doc:name="On Error Continue" doc:id="7eb25b02-1a47-4ac6-b393-3fdde46b6eb0" >
+					<set-variable value="#[{}]" doc:name="aqiAPIResponse" doc:id="d2ce46c7-ce2d-4432-ada2-49841b0c7371" variableName="aqiAPIResponse"/>
+				</on-error-continue>
+			</error-handler>
+		</try>
+		<set-payload value='#[%dw 2.0
+output application/json
+import * from dw::Runtime
+---
+
+{
+	"weatherData" :vars.weatherAPIResponse default "No data available.",
+	"airQualityData" :vars.aqiAPIResponse default "No data available.",
+	"heatIndex" : vars.heatIndex default "No data available",
+	"windIndex" : vars.windIndex default "No data available",
+}]' doc:name="Combine Wather API and AQI API Payload" doc:id="ff15d28d-e764-4849-a642-1f052ee30d96" />
+	
+	
+	</sub-flow>
+	
+</mule>

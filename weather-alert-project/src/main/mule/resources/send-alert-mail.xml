@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd 
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+		<email:smtp-config name="Email_SMTP_1" doc:name="Email SMTP"
+		doc:id="238cff83-1bf4-4c3c-8a45-514740a14bf1">
+		<email:smtp-connection host="${smtp.host}" user="${smtp.user}" password="${smtp.password}" port="${smtp.port}" connectionTimeout="100" readTimeout="100" writeTimeout="100">
+			<email:properties > 
+<email:property key="mail.smtp.starttls.enable" value="true" /> 
+</email:properties>
+		</email:smtp-connection>
+	</email:smtp-config>
+	
+	<sub-flow name="send-alert-mail-main-sub-flow" doc:id="e5b12319-dab5-42e0-9379-fed050fee1b7">
+	<set-variable value="#[%dw 2.0
+output application/java
+var coord = payload.weatherPayload.weatherData.coord
+---
+if(coord != &quot;NA&quot; or (not isEmpty(coord)))
+((p('googleMaps.link.template') default &quot;&quot;) replace &quot;&lt;lat&gt;&quot; with (coord.lat default &quot;&quot;) replace &quot;&lt;lng&gt;&quot; with (coord.lon default &quot;&quot;))
+else 
+&quot;NA&quot;]" doc:name="googleMapLocationLink" doc:id="27dbd6c1-6a76-47f3-b138-f65cfe95892e" variableName="googleMapLocationLink"/>
+		<set-payload value='#[%dw 2.0
+output application/json
+---
+{
+	email : payload.email,
+	mailSubject: "Your friend has requested for your help.",
+	mailBody : "Dear Recipient,\n" ++
+(payload.message default "") ++ 
+"\nWeather Conditions :\n" ++
+"* Heat Index : " ++ payload.weatherPayload.heatIndex.impact ++ "\n" ++
+"* Wind Index : " ++ payload.weatherPayload.windIndex.impact ++ "\n" ++
+"My Current Location : " ++ vars.googleMapLocationLink
+}]' doc:name="Set Payload" doc:id="32aa2764-0408-4965-979a-3ea67b4cf230" />
+		<logger level="INFO" doc:name="Logger" doc:id="12a008d4-e0e9-4df1-b631-06e0186ceed5" message="#[payload]" />
+		<email:send doc:name="Send" doc:id="f83286d0-f8c7-4a93-9d69-2e09ab5d3a74" config-ref="Email_SMTP_1" subject="#[payload.mailSubject]">
+			<email:to-addresses>
+				<email:to-address value="#[payload.email]" />
+
+			</email:to-addresses>
+			<email:body contentType="text/plain" encoding="UTF-8">
+				<email:content><![CDATA[#[%dw 2.0
+output application/java
+---
+payload.mailBody]]]></email:content>
+			</email:body>
+		</email:send>
+		<set-payload value='#[{
+                "response": "Alert sent successfully"
+                }]' doc:name="Set Payload" doc:id="77cbc26d-503b-4011-9246-d1a2d975279e" />
+	
+	
+	
+</sub-flow>
+</mule>

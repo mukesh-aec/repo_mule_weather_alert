@@ -1,0 +1,74 @@
+#%RAML 1.0 NamedExample
+
+{
+   "weatherData":{
+      "main":{
+         "temp":11.92,
+         "feels_like":11.47,
+         "temp_min":11.67,
+         "temp_max":12.22,
+         "pressure":1019,
+         "humidity":100
+      },
+      "coord":{
+         "lon":0.06,
+         "lat":51.51
+      },
+      "weather":{
+         "id":804,
+         "main":"Clouds",
+         "description":"overcast clouds",
+         "icon":"04n"
+      },
+      "wind":{
+         "speed":1.5,
+         "deg":110
+      },
+      "visibility":7000,
+      "location":{
+         "area":"North Woolwich",
+         "country":"GB"
+      },
+      "weatherIconURL":"http://openweathermap.org/img/wn/04n.png"
+   },
+   "airQualityData":{
+      "area":"royal docks",
+      "aqi":70,
+      "aqi_pollutants":{
+         "no2":70,
+         "o3":87,
+         "pm10":81,
+         "pm25":84
+      },
+      "aqi_visualization":{
+         "class":7,
+         "name":"Acceptable",
+         "color_hex":"#FFFFB4",
+         "color_rgb":[
+            255,
+            255,
+            180
+         ]
+      },
+      "recommended_non_sensitive":{
+         "general":"The quality of the air is moderate here, but you can still do your usual outdoor activities.",
+         "sports":"The quality of the air is moderate here, but you can still do your normal exercise.",
+         "ventilation":"The outside air is moderate. Reduce ventilation if your inside AQ situation allows you."
+      },
+      "recommend_sensitive":{
+         "general":"The quality of the air is moderate here. Consider reducing physical exertion.",
+         "sports":"The quality of air is moderate here. Consider moving your exercise to a healthier place or time.",
+         "ventilation":"The outside air is moderate. Reduce ventilation if your inside AQ situation allows you."
+      }
+   },
+   "heatIndex":{
+      "event_id":0,
+      "impact":"Normal",
+      "color_hex":"#90ee90"
+   },
+   "windIndex":{
+      "event_id":0,
+      "impact":"Light Wind",
+      "color_hex":"#90ee90"
+   }
+}

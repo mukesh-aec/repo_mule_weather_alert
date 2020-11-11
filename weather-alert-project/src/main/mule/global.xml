@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:tls="http://www.mulesoft.org/schema/mule/tls"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns:vm="http://www.mulesoft.org/schema/mule/vm"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd 
+http://www.mulesoft.org/schema/mule/tls http://www.mulesoft.org/schema/mule/tls/current/mule-tls.xsd 
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd 
+http://www.mulesoft.org/schema/mule/vm http://www.mulesoft.org/schema/mule/vm/current/mule-vm.xsd 
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd">
+		<http:request-config name="Weather_API_HTTP_CONFIG" doc:name="HTTP Request configuration" doc:id="ddbb334e-71c8-4de6-a9c2-569194a48f5f" >
+		<http:request-connection host="${openWeather.api.host}" />
+	</http:request-config>
+	<http:request-config name="AQI_API_HTTP_CONFIG" doc:name="HTTP Request configuration" doc:id="09c17817-d0de-4db1-8471-7f9c86636f37" >
+		<http:request-connection host="${aircheckr.api.host}" protocol="HTTPS">
+			<tls:context >
+				<tls:trust-store insecure="true" />
+			</tls:context>
+		</http:request-connection>
+	</http:request-config>
+	<ee:object-store-caching-strategy name="Caching_Strategy" doc:name="Caching Strategy" doc:id="95b8c56e-3f86-434a-84c0-1e76a5af0f18" keyGenerationExpression='#[vars.lat ++ ":" ++ vars.long ++ ":" ++ vars.apiName]' />
+	<configuration-properties doc:name="Configuration properties" doc:id="4432d227-2761-4ce4-babc-1cb4b77d8515" file="app-properties.yaml" />
+	
+	
+	</mule>
