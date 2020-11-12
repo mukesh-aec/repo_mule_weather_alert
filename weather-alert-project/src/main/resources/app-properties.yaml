@@ -18,7 +18,7 @@ googleMaps:
     template: "https://www.google.com/maps/search/?api=1&query=<lat>,<lng>"
 smtp:
   host: "smtp.gmail.com"
-  user: "muleweatheralert@gmail.com"
-  password: "mule@Weather"
+  user: "<email user>"
+  password: "<email password>"
   port: "587"
     
