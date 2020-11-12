@@ -5,6 +5,11 @@
 
 # Package Files #
 *.jar
+*.war
+*.ear
+
+# Eclipse-specific (https://github.com/github/gitignore/blob/master/Global/Eclipse.gitignore) #
+# ------------------------------------------------------------------------------------------- #
 *.pydevproject
 .metadata
 bin/**

@@ -25,6 +25,71 @@ if(coord != &quot;NA&quot; or (not isEmpty(coord)))
 ((p('googleMaps.link.template') default &quot;&quot;) replace &quot;&lt;lat&gt;&quot; with (coord.lat default &quot;&quot;) replace &quot;&lt;lng&gt;&quot; with (coord.lon default &quot;&quot;))
 else 
 &quot;NA&quot;]" doc:name="googleMapLocationLink" doc:id="27dbd6c1-6a76-47f3-b138-f65cfe95892e" variableName="googleMapLocationLink"/>
+		<parse-template doc:name="Prepare Email Body" doc:id="fd7378f2-44f4-4279-9895-f57e2bfa44d5" target="emailBody" targetValue="#[payload]">
+			<content>&lt;html&gt;
+&lt;head&gt;
+&lt;style&gt;
+#weather {
+  font-family: Arial, Helvetica, sans-serif;
+  border-collapse: collapse;
+  width: 70%;
+  
+}
+
+
+#weather tr:nth-child(even){background-color: #f2f2f2;}
+
+#weather tr:hover {background-color: #ddd;}
+
+
+&lt;/style&gt;
+&lt;meta charset=&quot;UTF-8&quot;&gt;
+&lt;/head&gt;
+	&lt;body&gt;
+	&lt;h2 align=&quot;center&quot;&gt;Your friend has requested your help!&lt;/h2&gt;
+	&lt;hr&gt;
+	&lt;div&gt;&lt;h3&gt;Message:&lt;/h3&gt;&lt;strong&gt;&lt;em&gt;#[payload.message]&lt;/em&gt;&lt;/strong&gt;&lt;br&gt;&lt;h4&gt;&lt;a href=\&quot;#[vars.googleMapLocationLink]\&quot;&gt;Click Here&lt;/a&gt; to view my current location on maps.&lt;/h4&gt;&lt;/div&gt;
+	&lt;hr&gt;
+		&lt;div align=&quot;center&quot;&gt;
+			&lt;table border=&quot;1px&quot; id=&quot;weather&quot;&gt;
+				&lt;tr&gt;
+					&lt;td colspan=&quot;4&quot; align=&quot;center&quot;&gt;Weather conditons&lt;/td&gt;
+				&lt;/tr&gt;
+				&lt;tr&gt;
+					&lt;th&gt;Weather Data&lt;/th&gt;&lt;th&gt;AQI Data&lt;/th&gt;
+				&lt;/tr&gt;
+				&lt;tr&gt;
+				&lt;td&gt;&lt;b&gt;Heat Index : &lt;/b&gt;#[payload.weatherPayload.heatIndex.impact]&lt;/td&gt;
+					&lt;td&gt;&lt;b&gt;Air Quality : &lt;/b&gt;#[payload.weatherPayload.airQualityData.aqi] (#[payload.weatherPayload.airQualityData.aqi_visualization.name])&lt;/td&gt;
+				&lt;/tr&gt;
+				&lt;tr&gt;
+					&lt;td&gt;&lt;b&gt;Wind Index : &lt;/b&gt;#[payload.weatherPayload.windIndex.impact]&lt;/td&gt;
+					&lt;td rowspan=&quot;3&quot;&gt;&lt;b&gt;Recommendation(Non-Sensitive Group) : &lt;/b&gt;&lt;br&gt;#[payload.weatherPayload.airQualityData.recommended_non_sensitive.general]&lt;/td&gt;
+				&lt;/tr&gt;
+				&lt;tr &gt;
+					&lt;td&gt;&lt;b&gt;Temp : &lt;/b&gt;#[payload.weatherPayload.weatherData.main.temp] &amp;deg;C&lt;/td&gt;
+				
+				&lt;/tr&gt;
+				&lt;tr&gt;
+					&lt;td&gt;&lt;b&gt;Condition : &lt;/b&gt;#[payload.weatherPayload.weatherData.weather.main]&lt;/td&gt;
+				&lt;/tr&gt;
+				&lt;tr&gt;
+					&lt;td&gt;&lt;b&gt;Visibilty : &lt;/b&gt;#[payload.weatherPayload.weatherData.visibility]m&lt;/td&gt;
+					&lt;td rowspan=&quot;3&quot;&gt;&lt;b&gt;Recommendation(Sensitive Group) : &lt;/b&gt;&lt;br&gt;#[payload.weatherPayload.airQualityData.recommend_sensitive.general]&lt;/td&gt;
+				&lt;/tr&gt;
+				&lt;tr&gt;
+					&lt;td&gt;&lt;b&gt;Humidity : &lt;/b&gt;#[payload.weatherPayload.weatherData.main.humidity]%&lt;/td&gt;
+				&lt;/tr&gt;
+				&lt;tr&gt;
+					&lt;td&gt;&lt;b&gt;Wind : &lt;/b&gt;#[payload.weatherPayload.weatherData.wind.speed] km/h&lt;/td&gt;
+				&lt;/tr&gt;
+			&lt;/table&gt;
+			
+			
+		&lt;/div&gt;
+	&lt;/body&gt;
+&lt;/html&gt;</content>
+		</parse-template>
 		<set-payload value='#[%dw 2.0
 output application/json
 ---
@@ -44,11 +109,8 @@ output application/json
 				<email:to-address value="#[payload.email]" />
 
 			</email:to-addresses>
-			<email:body contentType="text/plain" encoding="UTF-8">
-				<email:content><![CDATA[#[%dw 2.0
-output application/java
----
-payload.mailBody]]]></email:content>
+			<email:body contentType="text/html" encoding="UTF-8">
+				<email:content><![CDATA[#[vars.emailBody]]]></email:content>
 			</email:body>
 		</email:send>
 		<set-payload value='#[{
